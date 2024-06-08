@@ -12,7 +12,7 @@ router(app);
 app.use(errors);
 app.use(express.urlencoded({ extended: false }));
 //obtener la ruta base donde se encuentra el proyecto
-const pathBase = __dirname;
+const pathBase = process.env.ENVIROMENT === "development" ? __dirname : "";
 const options = {
   key: fs.readFileSync(pathBase + process.env.WEB_SERVER_PRIVATE_KEY_PATH),
   cert: fs.readFileSync(pathBase + process.env.WEB_SERVER_FULLCHAIN_CERT_PATH),
