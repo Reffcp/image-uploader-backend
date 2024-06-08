@@ -18,12 +18,20 @@ const options = {
   cert: fs.readFileSync(pathBase + process.env.WEB_SERVER_FULLCHAIN_CERT_PATH),
 };
 
-https
-  .createServer(options, app)
-  .listen(process.env.API_PORT, process.env.API_HOST, () => {
+if (process.env.ENVIROMENT === "development") {
+  app.listen(process.env.API_PORT, process.env.API_HOST, () => {
     console.log(
-      `Server is running on https://${process.env.API_HOST}:${process.env.API_PORT}`
+      `Server is running on http://localhost:${process.env.API_PORT}`
     );
   });
+} else {
+  https
+    .createServer(options, app)
+    .listen(process.env.API_PORT, process.env.API_HOST, () => {
+      console.log(
+        `Server is running on https://${process.env.API_HOST}:${process.env.API_PORT}`
+      );
+    });
+}
 
 module.exports = app;
