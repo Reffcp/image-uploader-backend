@@ -11,12 +11,6 @@ app.use(cors());
 router(app);
 app.use(errors);
 app.use(express.urlencoded({ extended: false }));
-//obtener la ruta base donde se encuentra el proyecto
-const pathBase = process.env.ENVIROMENT === "development" ? __dirname : "";
-const options = {
-  key: fs.readFileSync(pathBase + process.env.WEB_SERVER_PRIVATE_KEY_PATH),
-  cert: fs.readFileSync(pathBase + process.env.WEB_SERVER_FULLCHAIN_CERT_PATH),
-};
 
 if (process.env.ENVIROMENT === "development") {
   app.listen(process.env.API_PORT, process.env.API_HOST, () => {
@@ -25,6 +19,10 @@ if (process.env.ENVIROMENT === "development") {
     );
   });
 } else {
+  const options = {
+    key: fs.readFileSync(process.env.WEB_SERVER_PRIVATE_KEY_PATH),
+    cert: fs.readFileSync(process.env.WEB_SERVER_FULLCHAIN_CERT_PATH),
+  };
   https
     .createServer(options, app)
     .listen(process.env.API_PORT, process.env.API_HOST, () => {
