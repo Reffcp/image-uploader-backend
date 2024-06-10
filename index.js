@@ -1,4 +1,5 @@
-require("dotenv").config();
+const dotenv = require('dotenv');
+const path = require('path');
 const express = require("express");
 const errors = require("./src/network/errors");
 const router = require("./src/network/routes");
@@ -11,6 +12,9 @@ app.use(cors());
 router(app);
 app.use(errors);
 app.use(express.urlencoded({ extended: false }));
+
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
+dotenv.config({ path: path.resolve(__dirname, `./${envFile}`) });
 
 if (process.env.ENVIROMENT === "development") {
   app.listen(process.env.API_PORT, process.env.API_HOST, () => {
