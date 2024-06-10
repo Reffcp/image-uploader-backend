@@ -54,6 +54,28 @@ const uploadImage = async (req, res) => {
   });
 };
 
+const listImages = async (req, res) => {
+  const limitRows = 4;
+  const sqlSelect = `SELECT * from ${model.NOMBRE_TABLA} WHERE ${model.COLUMNAS.registro_activo} = 1 ORDER by ${model.COLUMNAS.imagen_id} DESC LIMIT ${limitRows} `;
+  try {
+    const rows = await pool.query(sqlSelect);
+    if (rows.length === 0) {
+      response.success(res, [], "No hay imágenes para mostrar", 200);
+    } else {
+      rows.forEach((row) => {
+        delete row[model.COLUMNAS.imagen_meta_s3];
+        row[model.COLUMNAS.registro_activo] =
+          row[model.COLUMNAS.registro_activo] === 1 ? true : false;
+      });
+      response.success(res, rows, "Imágenes cargadas correctamente", 200);
+    }
+  } catch (error) {
+    console.error("Error al consultar las imágenes en la base de datos", error);
+    response.error(res, "Error al consultar las imágenes", 500);
+  }
+};
+
 module.exports = {
   uploadImage,
+  listImages,
 };

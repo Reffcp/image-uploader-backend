@@ -24,11 +24,12 @@ SET time_zone = "+00:00";
 CREATE TABLE `imagenes` (
   `imagen_id` bigint(20) NOT NULL,
   `imagen_url` varchar(255) NOT NULL,
+  `imagen_meta_s3` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`imagen_meta_s3`)),
   `fecha_hora_creacion` datetime DEFAULT current_timestamp(),
   `fecha_hora_borrar` datetime DEFAULT NULL,
   `imagen_tamanio` double DEFAULT 0,
   `ip_origen` varchar(15) DEFAULT '0.0.0.0',
-  `registro_activo` bit(1) DEFAULT b'1'
+  `registro_activo` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
