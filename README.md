@@ -1,7 +1,7 @@
 
 # Image Uploader Backend
 
-Este es el backend del proyecto de carga de imágenes. Proporciona una API para cargar, gestionar y eliminar imágenes. El proyecto está construido con Node.js y Express, y utiliza PM2 para la gestión del proceso.
+Este es el backend del proyecto de carga de imágenes. Proporciona una API para cargar, gestionar y eliminar imágenes. El proyecto está construido con Node.js y Express, y utiliza MySQL para la gestión de metadatos y almacenamiento en S3 de AWS para las imágenes.
 
 ## Tabla de Contenidos
 
@@ -14,123 +14,74 @@ Este es el backend del proyecto de carga de imágenes. Proporciona una API para 
 - [API Endpoints](#api-endpoints)
 - [Gestión de Logs](#gestión-de-logs)
 - [Despliegue](#despliegue)
-- [Renovación Automática de Certificados SSL](#renovación-automática-de-certificados-ssl)
 - [Contribuciones](#contribuciones)
 - [Licencia](#licencia)
 
 ## Descripción
 
-El proyecto **Image Uploader Backend** proporciona una API RESTful para la gestión de imágenes. Permite a los usuarios cargar imágenes, generar enlaces de acceso y eliminar imágenes de forma automática. Este backend está diseñado para integrarse con un frontend desarrollado en Vue 3 y TypeScript.
+El proyecto Image Uploader Backend proporciona una API RESTful para la gestión de imágenes. Permite a los usuarios cargar imágenes, generar enlaces de acceso y eliminar imágenes automáticamente después de un período especificado.
 
 ## Características
 
 - Carga de imágenes.
 - Generación de enlaces de acceso a las imágenes.
-- Eliminación automática de imágenes.
-- Gestión de procesos con PM2.
-- Certificados SSL para conexiones seguras.
+- Eliminación automática de imágenes después de 16 días.
+- Integración con Mysql, cloud VPS y S3 de AWS.
+- Gestión de procesos con PM2 en VPS.
 
 ## Requisitos Previos
 
 - Node.js (versión 14 o superior)
 - npm (versión 6 o superior)
+- AWS CLI
 - PM2
-- Git
-- Certbot (para SSL)
-- OpenSSL (para certificados auto-firmados en desarrollo local)
 
 ## Instalación
 
 1. Clona el repositorio:
 
-   ```bash
-   git clone https://github.com/Reffcp/image-uploader-backend.git
-   cd image-uploader-backend
-   ```
+    ```sh
+    git clone https://github.com/Reffcp/image-uploader-backend.git
+    cd image-uploader-backend
+    ```
 
 2. Instala las dependencias:
 
-   ```bash
-   npm install
-   ```
+    ```sh
+    npm install
+    ```
 
 ## Configuración
 
-### Configuración de Entorno
+### Variables de Entorno
 
 Crea un archivo `.env` en la raíz del proyecto y configura las siguientes variables de entorno:
 
-```env
+```
 PORT=3000
 HOST=0.0.0.0
+FIREBASE_CONFIG=path/to/firebaseConfig.json
+AWS_ACCESS_KEY_ID=your_aws_access_key_id
+AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
+S3_BUCKET_NAME=your_s3_bucket_name
 ```
-
-### Certificados SSL para Desarrollo Local
-
-Para usar HTTPS en desarrollo local, genera certificados auto-firmados:
-
-1. Genera la clave privada:
-
-   ```bash
-   openssl genpkey -algorithm RSA -out key.pem
-   ```
-
-2. Crea una solicitud de certificado (CSR):
-
-   ```bash
-   openssl req -new -key key.pem -out csr.pem
-   ```
-
-3. Crea el certificado auto-firmado:
-
-   ```bash
-   openssl x509 -req -days 365 -in csr.pem -signkey key.pem -out cert.pem
-   ```
-
-Guarda los archivos \`key.pem\` y \`cert.pem\` en una ubicación segura.
 
 ## Ejecución
 
-### Ejecución en Desarrollo
+### En Desarrollo
 
-Para ejecutar el servidor en desarrollo sin HTTPS:
+Para ejecutar el servidor en desarrollo:
 
-```bash
+```sh
 npm run dev
 ```
 
-Para ejecutar el servidor en desarrollo con HTTPS:
-
-```javascript
-const fs = require('fs');
-const https = require('https');
-const express = require('express');
-const app = express();
-
-const options = {
-  key: fs.readFileSync('path/to/key.pem'),
-  cert: fs.readFileSync('path/to/cert.pem')
-};
-
-const port = process.env.PORT || 3000;
-const host = process.env.HOST || '0.0.0.0';
-
-https.createServer(options, app).listen(port, host, () => {
-  console.log(\`Server is running on https://${host}:${port}\`);
-});
-```
-
-### Ejecución en Producción con PM2
+### En Producción con PM2
 
 Inicia la aplicación con PM2:
 
-```bash
-pm2 start app.js --name image-uploader
-```
-
-Guarda la configuración de PM2:
-
-```bash
+```sh
+pm2 start ./index.js --name image-uploader
 pm2 save
 pm2 startup
 ```
@@ -139,20 +90,8 @@ pm2 startup
 
 Para ver los logs en tiempo real:
 
-```bash
+```sh
 pm2 logs image-uploader
-```
-
-Para ver solo los logs de error:
-
-```bash
-pm2 logs image-uploader --err
-```
-
-Para ver solo los logs de salida estándar:
-
-```bash
-pm2 logs image-uploader --out
 ```
 
 ## API Endpoints
@@ -163,8 +102,8 @@ Sube una imagen.
 
 **Request:**
 
-- \`Content-Type: multipart/form-data\`
-- Body: FormData con el campo \`image\`.
+- `Content-Type: multipart/form-data`
+- Body: FormData con el campo `image`.
 
 **Response:**
 
@@ -174,39 +113,27 @@ Sube una imagen.
 }
 ```
 
-### GET /images/:filename
+### GET /image/list
 
-Obtiene una imagen.
-
-**Response:**
-
-- \`Content-Type: image/jpeg\`
-
-### DELETE /images/:filename
-
-Elimina una imagen.
+Obtiene una lista de las 4 imagenes mas recientes.
 
 **Response:**
 
-```json
-{
-  "message": "Image deleted successfully"
-}
-```
+- `Content-Type: image/jpeg`
 
 ## Gestión de Logs
 
-PM2 maneja los logs de la aplicación. Los archivos de log están ubicados en \`~/.pm2/logs/\`.
+PM2 maneja los logs de la aplicación. Los archivos de log están ubicados en `~/.pm2/logs/`.
 
 Para ver los logs:
 
-```bash
+```sh
 pm2 logs image-uploader
 ```
 
 ## Despliegue
 
-### Despliegue en VPS con CyberPanel
+### En VPS con CyberPanel
 
 1. Configura el dominio en CyberPanel.
 2. Configura las reglas de proxy reverso.
@@ -217,40 +144,38 @@ pm2 logs image-uploader
 
 Para emitir un certificado SSL con Certbot:
 
-```bash
+```sh
 sudo certbot certonly --standalone -d your-domain.com
 ```
 
-## Renovación Automática de Certificados SSL
-
 Configura un cron job para renovar automáticamente los certificados:
 
-```bash
+```sh
 sudo crontab -e
 ```
 
 Añade la siguiente línea:
 
-```bash
+```sh
 0 3 * * * /usr/bin/certbot renew --quiet
 ```
 
 Para reiniciar Node.js después de la renovación, crea un script de renovación:
 
-```bash
+```sh
 sudo nano /etc/letsencrypt/renewal-hooks/post/restart_node.sh
 ```
 
 Añade el siguiente contenido:
 
-```bash
+```sh
 #!/bin/bash
 pm2 restart all
 ```
 
 Haz el script ejecutable:
 
-```bash
+```sh
 sudo chmod +x /etc/letsencrypt/renewal-hooks/post/restart_node.sh
 ```
 
