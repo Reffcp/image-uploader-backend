@@ -3,6 +3,7 @@ const uuid = require("uuid").v4;
 const response = require("../../network/response");
 const model = require("./model");
 const pool = require("../../data/connection");
+require("../../../config.js");
 
 const uploadImage = async (req, res) => {
   const file = req.file;

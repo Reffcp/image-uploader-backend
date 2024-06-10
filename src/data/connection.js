@@ -1,5 +1,6 @@
 const mysql = require("mysql2");
 const { promisify } = require("util");
+require("../../config.js");
 
 const dbconf = {
   host: process.env.DB_HOST,
