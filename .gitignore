@@ -3,3 +3,8 @@ node_modules/
 package-lock.json
 *.env*
 *.zip
+certs/*
+.env*
+.flaskenv*
+!.env.project
+!.env.vault
